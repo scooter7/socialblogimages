@@ -1,5 +1,8 @@
 streamlit
 openai
-nltk
-Pillow
 requests
+Pillow
+numpy
+easyocr
+opencv-python-headless
+openai_secret_manager
