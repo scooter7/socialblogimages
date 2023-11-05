@@ -1,29 +1,12 @@
 import streamlit as st
 import openai
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from detextify import Detextify
-
-# Ensure that NLTK stopwords are downloaded
-nltk.download('punkt')
-nltk.download('stopwords')
+import pytesseract
 
 # Set OpenAI key from Streamlit secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-
-# Instantiate Detextify
-detextifier = Detextify()
-
-# Function to extract keywords
-def extract_keywords(text):
-    stop_words = set(stopwords.words('english'))
-    word_tokens = word_tokenize(text)
-    filtered_text = [word for word in word_tokens if not word.lower() in stop_words]
-    return ' '.join(filtered_text)
 
 # Function to generate image using OpenAI's DALL-E
 def generate_image(prompt, width, height):
@@ -37,10 +20,20 @@ def generate_image(prompt, width, height):
     image = Image.open(BytesIO(response.content))
     return image
 
-# Function to remove text from the image using Detextify
+# Function to remove text from the image using Tesseract
 def remove_text_from_image(image):
-    result_image = detextifier.remove_text(image)
-    return result_image
+    # Use Tesseract to detect text in the image
+    boxes = pytesseract.image_to_boxes(image)
+
+    # Create a draw object to modify the image
+    draw = ImageDraw.Draw(image)
+
+    # For each detected text box, remove the text by covering it with a white rectangle
+    for b in boxes.splitlines():
+        b = b.split(' ')
+        draw.rectangle(((int(b[1]), image.height - int(b[2])), (int(b[3]), image.height - int(b[4]))), fill="#FFFFFF")
+
+    return image
 
 # Streamlit application
 st.title('Text to Image Generator')
@@ -54,11 +47,8 @@ user_input = st.text_area("Enter your text here:")
 
 # Button to process text and generate image
 if st.button('Generate Image'):
-    # Extract keywords from the user input
-    keywords = extract_keywords(user_input)
-
     # Generate image
-    image = generate_image(keywords, width, height)
+    image = generate_image(user_input, width, height)
 
     # Remove text from image
     image_without_text = remove_text_from_image(image)
