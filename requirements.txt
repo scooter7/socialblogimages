@@ -1,4 +1,4 @@
-Detextify
+detextify
 streamlit
 openai
 nltk
