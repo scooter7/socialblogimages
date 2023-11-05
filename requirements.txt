@@ -3,5 +3,5 @@ openai
 nltk
 Pillow
 requests
-pytesseract
+easyocr
 opencv-python-headless
