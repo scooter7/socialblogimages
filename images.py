@@ -6,9 +6,6 @@ from io import BytesIO
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-import easyocr
-import cv2
-import numpy as np
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -21,18 +18,10 @@ def extract_keywords(text):
     filtered_text = [word for word in word_tokens if not word.lower() in stop_words]
     return ' '.join(filtered_text)
 
-def remove_text(image):
-    reader = easyocr.Reader(['en'])
-    results = reader.readtext(image)
-    for (bbox, text, prob) in results:
-        if prob >= 0.6:
-            top_left = tuple(bbox[0][0])
-            bottom_right = tuple(bbox[2][0])
-            cv2.rectangle(image, top_left, bottom_right, (0, 0, 0), -1)
-    return image
-
 def generate_image(prompt, width, height):
-    prompt += " | only picture, no text"
+    # Add instructions to avoid text in the image
+    prompt = f"{prompt} - an image without any text or logos, focusing on the essence of the content."
+    
     response = openai.Image.create(
         prompt=prompt,
         n=1,
@@ -53,8 +42,4 @@ user_input = st.text_area("Enter your text here:")
 if st.button('Generate Image'):
     keywords = extract_keywords(user_input)
     image = generate_image(keywords, width, height)
-    image_np = np.array(image)
-    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-    image_no_text = remove_text(image_np)
-    st.image(cv2.cvtColor(image_no_text, cv2.COLOR_BGR2RGB), caption='Generated Image')
-
+    st.image(image, caption='Generated Image')
