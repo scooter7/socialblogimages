@@ -5,4 +5,4 @@ Pillow
 requests
 keras_ocr
 opencv-python-headless  # Use the headless version of opencv which is more likely to be installable in cloud environments
-tensorflow  # or tensorflow-cpu if you are in a CPU-only environment
+tensorflow-cpu  # or tensorflow-cpu if you are in a CPU-only environment
