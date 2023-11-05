@@ -6,11 +6,10 @@ from io import BytesIO
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-import pytesseract
+import easyocr
 import cv2
 import numpy as np
 
-# Make sure to download these once using nltk.download if they are not already downloaded
 nltk.download('punkt')
 nltk.download('stopwords')
 
@@ -23,15 +22,13 @@ def extract_keywords(text):
     return ' '.join(filtered_text)
 
 def remove_text(image):
-    # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # Use Tesseract to detect text
-    d = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
-    n_boxes = len(d['level'])
-    for i in range(n_boxes):
-        if int(d['conf'][i]) > 60:  # Confidence level of text detection
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 0), -1)
+    reader = easyocr.Reader(['en'])
+    results = reader.readtext(image)
+    for (bbox, text, prob) in results:
+        if prob >= 0.6:
+            top_left = tuple(bbox[0][0])
+            bottom_right = tuple(bbox[2][0])
+            cv2.rectangle(image, top_left, bottom_right, (0, 0, 0), -1)
     return image
 
 def generate_image(prompt, width, height):
@@ -59,4 +56,5 @@ if st.button('Generate Image'):
     image_np = np.array(image)
     image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
     image_no_text = remove_text(image_np)
-    st.image(image_no_text, caption='Generated Image', channels="BGR")
+    st.image(cv2.cvtColor(image_no_text, cv2.COLOR_BGR2RGB), caption='Generated Image')
+
