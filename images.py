@@ -6,11 +6,11 @@ from io import BytesIO
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-import keras_ocr
+import pytesseract
 import cv2
 import numpy as np
-import math
 
+# Make sure to download these once using nltk.download if they are not already downloaded
 nltk.download('punkt')
 nltk.download('stopwords')
 
@@ -22,25 +22,17 @@ def extract_keywords(text):
     filtered_text = [word for word in word_tokens if not word.lower() in stop_words]
     return ' '.join(filtered_text)
 
-def midpoint(x1, y1, x2, y2):
-    x_mid = int((x1 + x2)/2)
-    y_mid = int((y1 + y2)/2)
-    return (x_mid, y_mid)
-
-def inpaint_text(image, pipeline):
-    prediction_groups = pipeline.recognize([image])
-    mask = np.zeros(image.shape[:2], dtype="uint8")
-    for box in prediction_groups[0]:
-        x0, y0 = box[1][0]
-        x1, y1 = box[1][1] 
-        x2, y2 = box[1][2]
-        x3, y3 = box[1][3]
-        x_mid0, y_mid0 = midpoint(x1, y1, x2, y2)
-        x_mid1, y_mi1 = midpoint(x0, y0, x3, y3)
-        thickness = int(math.sqrt((x2 - x1)**2 + (y2 - y1)**2))
-        cv2.line(mask, (x_mid0, y_mid0), (x_mid1, y_mi1), 255, thickness)
-    inpainted_img = cv2.inpaint(image, mask, 7, cv2.INPAINT_NS)
-    return inpainted_img
+def remove_text(image):
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Use Tesseract to detect text
+    d = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+    n_boxes = len(d['level'])
+    for i in range(n_boxes):
+        if int(d['conf'][i]) > 60:  # Confidence level of text detection
+            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 0), -1)
+    return image
 
 def generate_image(prompt, width, height):
     prompt += " | only picture, no text"
@@ -54,8 +46,6 @@ def generate_image(prompt, width, height):
     image = Image.open(BytesIO(response.content))
     return image
 
-pipeline = keras_ocr.pipeline.Pipeline()
-
 st.title('Text to Image Generator')
 
 width = st.number_input('Width', min_value=256, max_value=1024, value=512)
@@ -68,5 +58,5 @@ if st.button('Generate Image'):
     image = generate_image(keywords, width, height)
     image_np = np.array(image)
     image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-    img_text_removed = inpaint_text(image_np, pipeline)
-    st.image(img_text_removed, caption='Generated Image', channels="BGR")
+    image_no_text = remove_text(image_np)
+    st.image(image_no_text, caption='Generated Image', channels="BGR")
