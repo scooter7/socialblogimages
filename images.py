@@ -3,7 +3,7 @@ import openai
 import requests
 from PIL import Image
 import numpy as np
-import easyocr
+import easyocr as ocr
 import cv2
 
 openai.api_key = st.secrets["openai_api_key"]
