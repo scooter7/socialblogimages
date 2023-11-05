@@ -23,8 +23,11 @@ def extract_keywords(text):
 
 # Function to generate image using OpenAI's DALL-E
 def generate_image(prompt, width, height):
+    # Add a phrase to the prompt that suggests no text
+    modified_prompt = f"{prompt}, no text in the image"
+    
     response = openai.Image.create(
-        prompt=prompt,
+        prompt=modified_prompt,
         n=1,
         size=f"{width}x{height}"
     )
