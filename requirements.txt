@@ -3,3 +3,7 @@ openai
 nltk
 Pillow
 requests
+keras_ocr
+opencv-python
+matplotlib
+numpy
