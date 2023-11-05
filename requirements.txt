@@ -1,4 +1,4 @@
-detextify
+pytesseract
 streamlit
 openai
 nltk
