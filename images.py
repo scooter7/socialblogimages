@@ -26,7 +26,8 @@ def generate_image(prompt, width, height):
     response = openai.Image.create(
         prompt=prompt,
         n=1,
-        size=f"{width}x{height}"
+        size=f"{width}x{height}",
+        include_text=False
     )
     image_url = response['data'][0]['url']
     response = requests.get(image_url)
