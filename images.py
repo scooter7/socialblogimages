@@ -19,8 +19,8 @@ def extract_keywords(text):
     return ' '.join(filtered_text)
 
 def generate_image(prompt, width, height):
-    # Add instructions to avoid text in the image
-    prompt = f"{prompt} - an image without any text or logos, focusing on the essence of the content."
+    # Add negative prompt to discourage text generation
+    prompt = f"{prompt} - an image without any letters. Just an image."
     
     response = openai.Image.create(
         prompt=prompt,
@@ -31,6 +31,7 @@ def generate_image(prompt, width, height):
     response = requests.get(image_url)
     image = Image.open(BytesIO(response.content))
     return image
+
 
 st.title('Text to Image Generator')
 
