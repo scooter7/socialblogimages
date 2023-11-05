@@ -3,6 +3,5 @@ openai
 nltk
 Pillow
 requests
-keras_ocr
+pytesseract
 opencv-python-headless
-tensorflow
